@@ -38,16 +38,17 @@ struct Member : public Tag
   {
     value = forward<TT>(tt);
   }
-  auto toTuple() const { return make_tuple(*this); }
+  auto toTuple() const& { return make_tuple(*this); }
+  auto toTuple() && { return make_tuple(move(*this)); }
 
   const ValueType& getValue() const { return value; }
 };
 
 template<typename Struct, typename... MemberTs>
 auto
-toTupleOfMembers(const Struct& s, MemberTs&&...)
+toTupleOfMembers(Struct&& s, MemberTs&&...)
 {
-  return make_tuple(static_cast<remove_cv_t<remove_reference_t<MemberTs>>>(s)...);
+  return make_tuple(static_cast<remove_cv_t<remove_reference_t<MemberTs>>>(forward<Struct>(s))...);
 }
 
 #define STRINGIFY(x) #x
@@ -61,9 +62,11 @@ toTupleOfMembers(const Struct& s, MemberTs&&...)
   };                                                                                                                                       \
   using name##_t = struct reflective::Member<type, name##Tag>;                                                                             \
   name##_t name{ defaultValue };                                                                                                           \
-  explicit operator name##_t() const { return name; }
+  explicit operator name##_t() const& { return name; }                                                                                     \
+  explicit operator name##_t()&& { return reflective::import::move(name); }
 
 #define DEFINE_TO_TUPLE(...)                                                                                                               \
-  auto toTuple() const { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }
+  auto toTuple() const& { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                       \
+  auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }
 
 } // namespace reflective

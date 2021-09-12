@@ -85,7 +85,7 @@ struct RecordWithCtorsCounter
   DEFINE_TO_TUPLE(m0, m1, m2);
 };
 
-TEST(RecordWithCtorsCounterTest, toTupleConversionIsOneCastAndOneMovePerMember)
+TEST(RecordWithCtorsCounterTest, lvalueToTupleConversionIsOneCastAndOneMovePerMember)
 {
   RecordWithCtorsCounter r;
   CtorsCounter::resetCounters();
@@ -93,6 +93,17 @@ TEST(RecordWithCtorsCounterTest, toTupleConversionIsOneCastAndOneMovePerMember)
   (void)t;
   EXPECT_EQ(3, CtorsCounter::copyCtorCallCount);
   EXPECT_EQ(3, CtorsCounter::moveCtorCallCount);
+  EXPECT_EQ(0, CtorsCounter::defCtorCallCount);
+  EXPECT_EQ(0, CtorsCounter::copyAssignCallCount);
+  EXPECT_EQ(0, CtorsCounter::moveAssignCallCount);
+}
+
+TEST(RecordWithCtorsCounterTest, rvalueToTupleConversionIsTwoMovesPerMember)
+{
+  auto t = [](){ auto r = RecordWithCtorsCounter{}; CtorsCounter::resetCounters(); return r;}().toTuple();
+  (void)t;
+  EXPECT_EQ(0, CtorsCounter::copyCtorCallCount);
+  EXPECT_EQ(6, CtorsCounter::moveCtorCallCount);
   EXPECT_EQ(0, CtorsCounter::defCtorCallCount);
   EXPECT_EQ(0, CtorsCounter::copyAssignCallCount);
   EXPECT_EQ(0, CtorsCounter::moveAssignCallCount);
