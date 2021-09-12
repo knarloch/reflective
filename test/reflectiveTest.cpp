@@ -3,13 +3,10 @@
 
 struct Record
 {
-  DECLARE_FIELD(int, id, 0);
-
-  DECLARE_FIELD(int, someNumber, 23);
-
-  DECLARE_FIELD(std::string, someText, "defaultSomeText");
-
-  ADD_TUPLE_CONVERSION(id, someNumber, someText);
+  DEFINE_MEMBER(int, id, 0);
+  DEFINE_MEMBER(int, someNumber, 23);
+  DEFINE_MEMBER(std::string, someText, "defaultSomeText");
+  DEFINE_TO_TUPLE(id, someNumber, someText);
 };
 
 TEST(RecordTest, CanGetSetValue_bultinType)
@@ -18,7 +15,7 @@ TEST(RecordTest, CanGetSetValue_bultinType)
   EXPECT_EQ(c.id, 0);
   c.id = 3;
   EXPECT_EQ(c.id, 3);
-  EXPECT_EQ(c.id.GetFieldName(), "id");
+  EXPECT_EQ(c.id.getFieldName(), "id");
 }
 
 TEST(RecordTest, CanGetSetValue_stringType)
@@ -27,9 +24,9 @@ TEST(RecordTest, CanGetSetValue_stringType)
   EXPECT_EQ(static_cast<std::string>(c.someText), std::string{ "defaultSomeText" });
   c.someText = { "someSomeText" }; // does not work with c-style string, must be std::string (or initializer_list}
   c.someText() = "someSomeText";
-  EXPECT_EQ(static_cast<decltype(c.someText)::value_type>(c.someText), "someSomeText");
+  EXPECT_EQ(static_cast<decltype(c.someText)::ValueType>(c.someText), "someSomeText");
   EXPECT_EQ(c.someText(), "someSomeText");
-  EXPECT_EQ(c.someText.GetFieldName(), "someText");
+  EXPECT_EQ(c.someText.getFieldName(), "someText");
 }
 
 TEST(RecordTest, CanConvertToTupleOfDeclaredFields)
@@ -42,7 +39,7 @@ TEST(RecordTest, CanConvertToTupleOfDeclaredFields)
   EXPECT_EQ(typeid(Record::someNumber_t), typeid(std::get<1>(t)));
   EXPECT_EQ(23, std::get<1>(t));
   EXPECT_EQ(typeid(Record::someText_t), typeid(std::get<2>(t)));
-  EXPECT_EQ(std::string{ "defaultSomeText" }, std::get<2>(t).Value());
+  EXPECT_EQ(std::string{ "defaultSomeText" }, std::get<2>(t).getValue());
 }
 
 struct CtorsCounter
@@ -82,10 +79,10 @@ decltype(CtorsCounter::moveAssignCallCount) CtorsCounter::moveAssignCallCount;
 
 struct RecordWithCtorsCounter
 {
-  DECLARE_FIELD(CtorsCounter, m0, {});
-  DECLARE_FIELD(CtorsCounter, m1, {});
-  DECLARE_FIELD(CtorsCounter, m2, {});
-  ADD_TUPLE_CONVERSION(m0, m1, m2);
+  DEFINE_MEMBER(CtorsCounter, m0, {});
+  DEFINE_MEMBER(CtorsCounter, m1, {});
+  DEFINE_MEMBER(CtorsCounter, m2, {});
+  DEFINE_TO_TUPLE(m0, m1, m2);
 };
 
 TEST(RecordWithCtorsCounterTest, toTupleConversionIsOneCastAndOneMovePerMember)
@@ -103,10 +100,9 @@ TEST(RecordWithCtorsCounterTest, toTupleConversionIsOneCastAndOneMovePerMember)
 
 struct RecordArray
 {
-  DECLARE_FIELD(Record, singleRecord, {});
-  DECLARE_FIELD(std::vector<Record>, recordVector, {});
-
-  ADD_TUPLE_CONVERSION(singleRecord, recordVector)
+  DEFINE_MEMBER(Record, singleRecord, {});
+  DEFINE_MEMBER(std::vector<Record>, recordVector, {});
+  DEFINE_TO_TUPLE(singleRecord, recordVector)
 };
 
 TEST(RecordArrayTest, canAccessComposedTypes)
@@ -114,13 +110,13 @@ TEST(RecordArrayTest, canAccessComposedTypes)
   auto ca = RecordArray{};
   ca.singleRecord().id() = 4;
   EXPECT_EQ(ca.singleRecord().id(), 4);
-  EXPECT_EQ(ca.singleRecord.GetFieldName(), "singleRecord");
+  EXPECT_EQ(ca.singleRecord.getFieldName(), "singleRecord");
 
   auto c = Record{};
   c.someText() = "superSomeText";
   ca.recordVector().push_back(c);
   EXPECT_EQ(ca.recordVector()[0].someText(), "superSomeText");
-  EXPECT_EQ(ca.recordVector.GetFieldName(), "recordVector");
+  EXPECT_EQ(ca.recordVector.getFieldName(), "recordVector");
 }
 
 TEST(RecordArrayTest, CanConvertToTupleOfDeclaredFields)

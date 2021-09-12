@@ -14,56 +14,56 @@ using std::tuple;
 using namespace reflective::import;
 
 template<typename T, typename Tag>
-struct Field : public Tag
+struct Member : public Tag
 {
-  using value_type = T;
-  T value;
+  using ValueType = T;
+  ValueType value;
 
-  Field(T tt)
+  Member(ValueType tt)
     : value{ move(tt) }
   {}
 
-  T& operator()() { return value; }
+  ValueType& operator()() { return value; }
 
-  const T& operator()() const { return value; }
+  const ValueType& operator()() const { return value; }
 
-  // cast operators to enable static_cast<T>()
-  operator T&() { return value; }
+  // cast operators to enable static_cast<ValueType>()
+  operator ValueType&() { return value; }
 
-  operator const T&() const { return value; }
+  operator const ValueType&() const { return value; }
 
   // Another possible interfaces (draft):
   template<typename TT>
-  void SetValue(TT& tt)
+  void setValue(TT& tt)
   {
     value = forward<TT>(tt);
   }
   auto toTuple() const { return make_tuple(*this); }
 
-  const T& Value() const { return value; }
+  const ValueType& getValue() const { return value; }
 };
 
-template<typename Struct, typename... FieldsT>
+template<typename Struct, typename... MemberTs>
 auto
-toTupleOfMembers(const Struct& s, FieldsT&&... fields)
+toTupleOfMembers(const Struct& s, MemberTs&&...)
 {
-  return make_tuple(static_cast<remove_cv_t<remove_reference_t<FieldsT>>>(s)...);
+  return make_tuple(static_cast<remove_cv_t<remove_reference_t<MemberTs>>>(s)...);
 }
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
-#define DECLARE_FIELD(type, name, defaultValue)                                                                                            \
+#define DEFINE_MEMBER(type, name, defaultValue)                                                                                            \
   struct name##Tag                                                                                                                         \
   {                                                                                                                                        \
     constexpr static char const* fieldName{ TOSTRING(name) };                                                                              \
-    constexpr static char const* GetFieldName() { return fieldName; };                                                                     \
+    constexpr static char const* getFieldName() { return fieldName; };                                                                     \
   };                                                                                                                                       \
-  using name##_t = struct reflective::Field<type, name##Tag>;                                                                              \
+  using name##_t = struct reflective::Member<type, name##Tag>;                                                                             \
   name##_t name{ defaultValue };                                                                                                           \
   explicit operator name##_t() const { return name; }
 
-#define ADD_TUPLE_CONVERSION(...)                                                                                                          \
+#define DEFINE_TO_TUPLE(...)                                                                                                               \
   auto toTuple() const { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }
 
 } // namespace reflective
