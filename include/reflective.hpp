@@ -50,16 +50,16 @@ insertMemberToTuple(const Struct& s, Tuple&& t, FieldT f)
 
 template<typename Struct, typename Tuple, typename FieldT, typename... FieldsT>
 auto
-insertMemberToTuple(const Struct& s, Tuple&& t, FieldT f, FieldsT... fields)
+insertMemberToTuple(const Struct& s, Tuple&& t, FieldT f, FieldsT&&... fields)
 {
-  return insertMemberToTuple(s, insertMemberToTuple(s, t, fields...), f);
+  return insertMemberToTuple(s, insertMemberToTuple(s, forward<Tuple>(t), forward<FieldsT>(fields)...), f);
 }
 
 template<typename Struct, typename... FieldsT>
 auto
-toTupleOfMembers(const Struct& s, FieldsT... fields)
+toTupleOfMembers(const Struct& s, FieldsT&&... fields)
 {
-  return insertMemberToTuple(s, std::make_tuple(), fields...);
+  return insertMemberToTuple(s, std::make_tuple(), forward<FieldsT>(fields)...);
 }
 
 #define STRINGIFY(x) #x
@@ -76,6 +76,6 @@ toTupleOfMembers(const Struct& s, FieldsT... fields)
   operator reflective::import::tuple<name##_t>() const { return reflective::import::make_tuple(name); }
 
 #define ADD_TUPLE_CONVERSION(...)                                                                                                          \
-auto toTuple() const { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                 \
+  auto toTuple() const { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }
 
 } // namespace reflective
