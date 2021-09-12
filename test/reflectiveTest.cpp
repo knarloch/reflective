@@ -45,6 +45,62 @@ TEST(RecordTest, CanConvertToTupleOfDeclaredFields)
   EXPECT_EQ(std::string{ "defaultSomeText" }, std::get<2>(t).Value());
 }
 
+struct CtorsCounter
+{
+  static int defCtorCallCount;
+  static int copyCtorCallCount;
+  static int moveCtorCallCount;
+  static int copyAssignCallCount;
+  static int moveAssignCallCount;
+  static void resetCounters()
+  {
+    defCtorCallCount = 0;
+    copyCtorCallCount = 0;
+    moveCtorCallCount = 0;
+    copyAssignCallCount = 0;
+    moveAssignCallCount = 0;
+  }
+  CtorsCounter() { defCtorCallCount++; }
+  CtorsCounter(const CtorsCounter&) { copyCtorCallCount++; }
+  CtorsCounter(CtorsCounter&&) { moveCtorCallCount++; }
+  CtorsCounter& operator=(const CtorsCounter&)
+  {
+    copyAssignCallCount++;
+    return *this;
+  }
+  CtorsCounter& operator=(CtorsCounter&&)
+  {
+    moveAssignCallCount++;
+    return *this;
+  }
+};
+decltype(CtorsCounter::defCtorCallCount) CtorsCounter::defCtorCallCount;
+decltype(CtorsCounter::copyCtorCallCount) CtorsCounter::copyCtorCallCount;
+decltype(CtorsCounter::moveCtorCallCount) CtorsCounter::moveCtorCallCount;
+decltype(CtorsCounter::copyAssignCallCount) CtorsCounter::copyAssignCallCount;
+decltype(CtorsCounter::moveAssignCallCount) CtorsCounter::moveAssignCallCount;
+
+struct RecordWithCtorsCounter
+{
+  DECLARE_FIELD(CtorsCounter, m0, {});
+  DECLARE_FIELD(CtorsCounter, m1, {});
+  DECLARE_FIELD(CtorsCounter, m2, {});
+  ADD_TUPLE_CONVERSION(m0, m1, m2);
+};
+
+TEST(RecordWithCtorsCounterTest, toTupleConversionIsOneCastAndOneMovePerMember)
+{
+  RecordWithCtorsCounter r;
+  CtorsCounter::resetCounters();
+  auto t = r.toTuple();
+  (void)t;
+  EXPECT_EQ(3, CtorsCounter::copyCtorCallCount);
+  EXPECT_EQ(3, CtorsCounter::moveCtorCallCount);
+  EXPECT_EQ(0, CtorsCounter::defCtorCallCount);
+  EXPECT_EQ(0, CtorsCounter::copyAssignCallCount);
+  EXPECT_EQ(0, CtorsCounter::moveAssignCallCount);
+}
+
 struct RecordArray
 {
   DECLARE_FIELD(Record, singleRecord, {});

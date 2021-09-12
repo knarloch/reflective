@@ -7,6 +7,8 @@ namespace import {
 using std::forward;
 using std::make_tuple;
 using std::move;
+using std::remove_cv_t;
+using std::remove_reference_t;
 using std::tuple;
 }
 using namespace reflective::import;
@@ -41,25 +43,11 @@ struct Field : public Tag
   const T& Value() const { return value; }
 };
 
-template<typename Struct, typename Tuple, typename FieldT>
-auto
-insertMemberToTuple(const Struct& s, Tuple&& t, FieldT f)
-{
-  return std::tuple_cat((static_cast<tuple<FieldT>>(s)), std::forward<Tuple>(t));
-}
-
-template<typename Struct, typename Tuple, typename FieldT, typename... FieldsT>
-auto
-insertMemberToTuple(const Struct& s, Tuple&& t, FieldT f, FieldsT&&... fields)
-{
-  return insertMemberToTuple(s, insertMemberToTuple(s, forward<Tuple>(t), forward<FieldsT>(fields)...), f);
-}
-
 template<typename Struct, typename... FieldsT>
 auto
 toTupleOfMembers(const Struct& s, FieldsT&&... fields)
 {
-  return insertMemberToTuple(s, std::make_tuple(), forward<FieldsT>(fields)...);
+  return make_tuple(static_cast<remove_cv_t<remove_reference_t<FieldsT>>>(s)...);
 }
 
 #define STRINGIFY(x) #x
@@ -73,7 +61,7 @@ toTupleOfMembers(const Struct& s, FieldsT&&... fields)
   };                                                                                                                                       \
   using name##_t = struct reflective::Field<type, name##Tag>;                                                                              \
   name##_t name{ defaultValue };                                                                                                           \
-  operator reflective::import::tuple<name##_t>() const { return reflective::import::make_tuple(name); }
+  explicit operator name##_t() const { return name; }
 
 #define ADD_TUPLE_CONVERSION(...)                                                                                                          \
   auto toTuple() const { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }
