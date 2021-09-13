@@ -11,10 +11,10 @@ struct ToStringContext
   std::string state;
 
   template<typename MemberT>
-  void applyMember(const MemberT& member)
+  void applyMember(MemberT&& member)
   {
     std::stringstream ss;
-    ss << "\"" << member.getMemberName() << "\": " << member.getValue() << ", ";
+    ss << "\"" << member.getMemberName() << "\": " << forward<MemberT>(member).getValue() << ", ";
     state.append(ss.str());
   }
   void applyStruct(const char* memberName, ToStringContext toStringContext)
@@ -22,7 +22,7 @@ struct ToStringContext
     state.append("\"");
     state.append(memberName);
     state.append("\": { ");
-    state.append(toStringContext.state);
+    state.append(move(toStringContext.state));
     state.append(" }, ");
   }
 };
