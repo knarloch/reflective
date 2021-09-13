@@ -6,23 +6,32 @@
 
 namespace reflective {
 
-template<typename MemberT>
-std::string
-memberToSting(const MemberT& member)
+struct ToStringContext
 {
-  std::stringstream ss;
-  ss << "\"" << member.getMemberName() << "\": " << member.getValue() << ", ";
-  return ss.str();
-}
+  std::string state;
+
+  template<typename MemberT>
+  void applyMember(const MemberT& member)
+  {
+    std::stringstream ss;
+    ss << "\"" << member.getMemberName() << "\": " << member.getValue() << ", ";
+    state.append(ss.str());
+  }
+  void applyStruct(const char* memberName, ToStringContext toStringContext)
+  {
+    state.append("\"");
+    state.append(memberName);
+    state.append("\": { ");
+    state.append(toStringContext.state);
+    state.append(" }, ");
+  }
+};
 
 template<typename Struct>
 std::string
 toString(const Struct& s)
 {
-  std::stringstream ss;
-
-  forEachMember([&](const auto& m) { ss << memberToSting(m); }, s);
-  return ss.str();
+  return "{ " + move(forEachMember(ToStringContext{}, s).state) + " }";
 }
 
 }

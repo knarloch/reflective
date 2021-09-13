@@ -2,6 +2,7 @@
 #define REFLECTIVE_REFLECTIVE_HPP
 
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace reflective {
@@ -15,6 +16,8 @@ using std::move;
 using std::remove_cv_t;
 using std::remove_reference_t;
 using std::tuple;
+using std::tuple_element;
+using std::tuple_size;
 }
 using namespace reflective::import;
 
@@ -43,9 +46,6 @@ struct Member : public Tag
   {
     value = forward<TT>(tt);
   }
-  auto toTuple() const& { return make_tuple(*this); }
-  auto toTuple() && { return make_tuple(move(*this)); }
-
   const ValueType& getValue() const { return value; }
 };
 
@@ -72,28 +72,52 @@ toTupleOfMembers(Struct&& s, MemberTs&&...)
 
 #define DEFINE_TO_TUPLE(...)                                                                                                               \
   auto toTuple() const& { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                       \
-  auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }
+  auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }                                  \
+  static constexpr bool hasToTuple() { return true; };
 
-template<size_t I = 0, typename Callback, typename... Ts>
-typename enable_if<I == sizeof...(Ts), void>::type
-forEachTupleMember(Callback c, tuple<Ts...> t)
+template<size_t I = 0, typename Context, typename... Ts>
+typename enable_if<I == sizeof...(Ts), Context>::type
+forEachTupleMember(Context context, tuple<Ts...> t)
 {
-  return;
+  return context;
 }
 
-template<size_t I = 0, typename Callback, typename... Ts>
-typename enable_if<(I < sizeof...(Ts)), void>::type
-forEachTupleMember(Callback c, tuple<Ts...> t)
+template<typename, typename = void>
+struct HasToTupleMethod : std::false_type
+{};
+template<typename T>
+struct HasToTupleMethod<T, std::void_t<decltype(T::hasToTuple)>> : std::is_convertible<decltype(T::hasToTuple), bool (*)()>
+{};
+
+template<size_t I, typename Context, typename... Ts>
+typename enable_if<!HasToTupleMethod<typename tuple_element<I, tuple<Ts...>>::type::ValueType>::value, Context>::type
+forTupleMember(Context context, tuple<Ts...> t)
 {
-  c(get<I>(t));
-  forEachTupleMember<I + 1>(c, t);
+  context.applyMember(get<I>(t));
+  return context;
 }
 
-template<typename Callback, typename StructT>
-void
-forEachMember(Callback c, StructT s)
+template<size_t I, typename Context, typename... Ts>
+typename enable_if<HasToTupleMethod<typename tuple_element<I, tuple<Ts...>>::type::ValueType>::value, Context>::type
+forTupleMember(Context context, tuple<Ts...> t)
 {
-  forEachTupleMember(c, s.toTuple());
+  context.applyStruct(get<I>(t).getMemberName(), forEachMember(Context{}, get<I>(t).getValue()));
+  return context;
+}
+
+template<size_t I = 0, typename Context, typename... Ts>
+typename enable_if<(I < sizeof...(Ts)), Context>::type
+forEachTupleMember(Context context, tuple<Ts...> t)
+{
+  context =  forTupleMember<I>(context, t);
+  return forEachTupleMember<I + 1>(move(context), t);
+}
+
+template<typename Context, typename StructT>
+Context
+forEachMember(Context context, StructT s)
+{
+  return forEachTupleMember(context, s.toTuple());
 }
 
 } // namespace reflective

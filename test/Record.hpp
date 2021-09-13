@@ -12,6 +12,13 @@ struct Record
   DEFINE_TO_TUPLE(id, someNumber, someText);
 };
 
+struct RecordInRecord
+{
+  DEFINE_MEMBER(Record, firstRecord, {});
+  DEFINE_MEMBER(Record, secondRecord, {});
+  DEFINE_TO_TUPLE(firstRecord, secondRecord);
+};
+
 struct RecordArray
 {
   DEFINE_MEMBER(Record, singleRecord, {});

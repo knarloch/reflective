@@ -129,3 +129,9 @@ TEST(RecordArrayTest, CanConvertToTupleOfDeclaredFields)
   EXPECT_EQ(typeid(RecordArray::singleRecord_t), typeid(std::get<0>(t)));
   EXPECT_EQ(typeid(RecordArray::recordVector_t), typeid(std::get<1>(t)));
 }
+
+TEST(HasToTupleTest, _){
+  EXPECT_TRUE(reflective::HasToTupleMethod<Record>::value);
+  EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t>::value);
+  EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t::ValueType>::value);
+}
