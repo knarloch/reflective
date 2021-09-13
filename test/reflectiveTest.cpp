@@ -7,7 +7,7 @@ TEST(RecordTest, CanGetSetValue_bultinType)
   EXPECT_EQ(c.id, 0);
   c.id = 3;
   EXPECT_EQ(c.id, 3);
-  EXPECT_EQ(c.id.getFieldName(), "id");
+  EXPECT_EQ(c.id.getMemberName(), "id");
 }
 
 TEST(RecordTest, CanGetSetValue_stringType)
@@ -18,7 +18,7 @@ TEST(RecordTest, CanGetSetValue_stringType)
   c.someText() = "someSomeText";
   EXPECT_EQ(static_cast<decltype(c.someText)::ValueType>(c.someText), "someSomeText");
   EXPECT_EQ(c.someText(), "someSomeText");
-  EXPECT_EQ(c.someText.getFieldName(), "someText");
+  EXPECT_EQ(c.someText.getMemberName(), "someText");
 }
 
 TEST(RecordTest, CanConvertToTupleOfDeclaredFields)
@@ -112,13 +112,13 @@ TEST(RecordArrayTest, canAccessComposedTypes)
   auto ca = RecordArray{};
   ca.singleRecord().id() = 4;
   EXPECT_EQ(ca.singleRecord().id(), 4);
-  EXPECT_EQ(ca.singleRecord.getFieldName(), "singleRecord");
+  EXPECT_EQ(ca.singleRecord.getMemberName(), "singleRecord");
 
   auto c = Record{};
   c.someText() = "superSomeText";
   ca.recordVector().push_back(c);
   EXPECT_EQ(ca.recordVector()[0].someText(), "superSomeText");
-  EXPECT_EQ(ca.recordVector.getFieldName(), "recordVector");
+  EXPECT_EQ(ca.recordVector.getMemberName(), "recordVector");
 }
 
 TEST(RecordArrayTest, CanConvertToTupleOfDeclaredFields)

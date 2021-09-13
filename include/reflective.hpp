@@ -62,8 +62,8 @@ toTupleOfMembers(Struct&& s, MemberTs&&...)
 #define DEFINE_MEMBER(type, name, defaultValue)                                                                                            \
   struct name##Tag                                                                                                                         \
   {                                                                                                                                        \
-    constexpr static char const* fieldName{ TOSTRING(name) };                                                                              \
-    constexpr static char const* getFieldName() { return fieldName; };                                                                     \
+    constexpr static char const* memberName{ TOSTRING(name) };                                                                             \
+    constexpr static char const* getMemberName() { return memberName; };                                                                   \
   };                                                                                                                                       \
   using name##_t = struct reflective::Member<type, name##Tag>;                                                                             \
   name##_t name{ defaultValue };                                                                                                           \

@@ -11,7 +11,7 @@ std::string
 memberToSting(const MemberT& member)
 {
   std::stringstream ss;
-  ss << "\"" << member.getFieldName() << "\": " << member.getValue() << ", ";
+  ss << "\"" << member.getMemberName() << "\": " << member.getValue() << ", ";
   return ss.str();
 }
 
