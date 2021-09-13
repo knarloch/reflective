@@ -1,13 +1,5 @@
-#include "reflective.hpp"
+#include "Record.hpp"
 #include "gtest/gtest.h"
-
-struct Record
-{
-  DEFINE_MEMBER(int, id, 0);
-  DEFINE_MEMBER(int, someNumber, 23);
-  DEFINE_MEMBER(std::string, someText, "defaultSomeText");
-  DEFINE_TO_TUPLE(id, someNumber, someText);
-};
 
 TEST(RecordTest, CanGetSetValue_bultinType)
 {
@@ -100,7 +92,13 @@ TEST(RecordWithCtorsCounterTest, lvalueToTupleConversionIsOneCastAndOneMovePerMe
 
 TEST(RecordWithCtorsCounterTest, rvalueToTupleConversionIsTwoMovesPerMember)
 {
-  auto t = [](){ auto r = RecordWithCtorsCounter{}; CtorsCounter::resetCounters(); return r;}().toTuple();
+  auto t =
+    []() {
+      auto r = RecordWithCtorsCounter{};
+      CtorsCounter::resetCounters();
+      return r;
+    }()
+      .toTuple();
   (void)t;
   EXPECT_EQ(0, CtorsCounter::copyCtorCallCount);
   EXPECT_EQ(6, CtorsCounter::moveCtorCallCount);
@@ -108,13 +106,6 @@ TEST(RecordWithCtorsCounterTest, rvalueToTupleConversionIsTwoMovesPerMember)
   EXPECT_EQ(0, CtorsCounter::copyAssignCallCount);
   EXPECT_EQ(0, CtorsCounter::moveAssignCallCount);
 }
-
-struct RecordArray
-{
-  DEFINE_MEMBER(Record, singleRecord, {});
-  DEFINE_MEMBER(std::vector<Record>, recordVector, {});
-  DEFINE_TO_TUPLE(singleRecord, recordVector)
-};
 
 TEST(RecordArrayTest, canAccessComposedTypes)
 {

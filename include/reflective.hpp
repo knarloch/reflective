@@ -1,10 +1,15 @@
+#ifndef REFLECTIVE_REFLECTIVE_HPP
+#define REFLECTIVE_REFLECTIVE_HPP
+
 #include <tuple>
 #include <utility>
 
 namespace reflective {
 
 namespace import {
+using std::enable_if;
 using std::forward;
+using std::get;
 using std::make_tuple;
 using std::move;
 using std::remove_cv_t;
@@ -69,4 +74,28 @@ toTupleOfMembers(Struct&& s, MemberTs&&...)
   auto toTuple() const& { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                       \
   auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }
 
+template<size_t I = 0, typename Callback, typename... Ts>
+typename enable_if<I == sizeof...(Ts), void>::type
+forEachTupleMember(Callback c, tuple<Ts...> t)
+{
+  return;
+}
+
+template<size_t I = 0, typename Callback, typename... Ts>
+typename enable_if<(I < sizeof...(Ts)), void>::type
+forEachTupleMember(Callback c, tuple<Ts...> t)
+{
+  c(get<I>(t));
+  forEachTupleMember<I + 1>(c, t);
+}
+
+template<typename Callback, typename StructT>
+void
+forEachMember(Callback c, StructT s)
+{
+  forEachTupleMember(c, s.toTuple());
+}
+
 } // namespace reflective
+
+#endif // REFLECTIVE_REFLECTIVE_HPP

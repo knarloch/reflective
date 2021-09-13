@@ -1,6 +1,9 @@
 
 
-set(TEST_SOURCES reflectiveTest.cpp)
+set(TEST_SOURCES
+        reflectiveTest.cpp
+        toStringTest.cpp
+        )
 
 add_executable(unitTests ${TEST_SOURCES})
 
