@@ -38,3 +38,37 @@ TEST(toStringTest, RecordInRecord)
   cursor = x.find(r.secondRecord().someText(), cursor);
   EXPECT_NE(cursor, std::string::npos);
 }
+
+TEST(toStringTest, RecordVector)
+{
+  RecordVector r;
+  auto x = reflective::toString(r);
+
+  EXPECT_EQ(typeid(x), typeid(std::string));
+
+  auto cursor = x.find(r.singleRecord.getMemberName());
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.singleRecord().id), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.singleRecord().someNumber), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(r.singleRecord().someText(), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+
+  cursor = x.find(r.recordVector.getMemberName(), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.recordVector()[0].id), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.recordVector()[0].someNumber), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(r.recordVector()[0].someText(), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.recordVector()[1].id), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(std::to_string(r.recordVector()[1].someNumber), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+  cursor = x.find(r.recordVector()[1].someText(), cursor);
+  EXPECT_NE(cursor, std::string::npos);
+}

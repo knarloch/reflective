@@ -19,12 +19,11 @@ struct RecordInRecord
   DEFINE_TO_TUPLE(firstRecord, secondRecord);
 };
 
-struct RecordArray
+struct RecordVector
 {
   DEFINE_MEMBER(Record, singleRecord, {});
-  DEFINE_MEMBER(std::vector<Record>, recordVector, {});
+  DEFINE_MEMBER_VECTOR(Record, recordVector, (std::vector<Record>{ {}, {} }));
   DEFINE_TO_TUPLE(singleRecord, recordVector)
 };
-
 
 #endif // REFLECTIVE_RECORD_HPP

@@ -1,5 +1,6 @@
 #include "Record.hpp"
 #include "gtest/gtest.h"
+#include <array>
 
 TEST(RecordTest, CanGetSetValue_bultinType)
 {
@@ -109,7 +110,7 @@ TEST(RecordWithCtorsCounterTest, rvalueToTupleConversionIsTwoMovesPerMember)
 
 TEST(RecordArrayTest, canAccessComposedTypes)
 {
-  auto ca = RecordArray{};
+  auto ca = RecordVector{};
   ca.singleRecord().id() = 4;
   EXPECT_EQ(ca.singleRecord().id(), 4);
   EXPECT_EQ(ca.singleRecord.getMemberName(), "singleRecord");
@@ -117,21 +118,39 @@ TEST(RecordArrayTest, canAccessComposedTypes)
   auto c = Record{};
   c.someText() = "superSomeText";
   ca.recordVector().push_back(c);
-  EXPECT_EQ(ca.recordVector()[0].someText(), "superSomeText");
+  EXPECT_EQ(ca.recordVector().crbegin()->someText(), "superSomeText");
   EXPECT_EQ(ca.recordVector.getMemberName(), "recordVector");
 }
 
 TEST(RecordArrayTest, CanConvertToTupleOfDeclaredFields)
 {
-  RecordArray ra;
+  RecordVector ra;
   auto t = ra.toTuple();
   EXPECT_EQ(2, std::tuple_size<decltype(t)>());
-  EXPECT_EQ(typeid(RecordArray::singleRecord_t), typeid(std::get<0>(t)));
-  EXPECT_EQ(typeid(RecordArray::recordVector_t), typeid(std::get<1>(t)));
+  EXPECT_EQ(typeid(RecordVector::singleRecord_t), typeid(std::get<0>(t)));
+  EXPECT_EQ(typeid(RecordVector::recordVector_t), typeid(std::get<1>(t)));
 }
 
 TEST(HasToTupleTest, _){
   EXPECT_TRUE(reflective::HasToTupleMethod<Record>::value);
   EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t>::value);
   EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t::ValueType>::value);
+}
+
+TEST(HasIterator, _){
+  EXPECT_FALSE(reflective::HasIterator<int>::value);
+  EXPECT_FALSE(reflective::HasIterator<Record>::value);
+  EXPECT_FALSE(reflective::HasIterator<Record::id_t>::value);
+
+  EXPECT_TRUE(reflective::HasIterator<std::vector<int>>::value);
+  EXPECT_TRUE(reflective::HasIterator<std::vector<Record>>::value);
+  EXPECT_TRUE(reflective::HasIterator<std::vector<Record::id_t>>::value);
+
+  EXPECT_TRUE((reflective::HasIterator<std::array<int, 1u>>::value));
+  EXPECT_TRUE((reflective::HasIterator<std::array<Record, 1u>>::value));
+  EXPECT_TRUE((reflective::HasIterator<std::array<Record::id_t, 1u>>::value));
+
+  EXPECT_TRUE((reflective::HasIterator<std::initializer_list<int>>::value));
+  EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record>>::value));
+  EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record::id_t>>::value));
 }
