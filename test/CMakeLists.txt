@@ -2,7 +2,7 @@
 
 set(TEST_SOURCES
         reflectiveTest.cpp
-        toStringTest.cpp
+        toTreelikeMultilineStringTest.cpp
         )
 
 add_executable(unitTests ${TEST_SOURCES})
