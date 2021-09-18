@@ -25,13 +25,13 @@ struct ToTransformation
   }
 
   template<typename MemberT>
-  void applyMember(MemberT&& member, ToTransformation alreadyTransformed)
+  void applyMember(MemberT&& member, TrasformationOfMemberT<ToTransformation, MemberT> alreadyTransformed)
   {
     transformed[member.getMemberName()] = alreadyTransformed.transformed;
   }
 
   template<typename MemberT>
-  void applyMember(MemberT&& member, vector<ToTransformation> alreadyTransformed)
+  void applyMember(MemberT&& member, vector<TrasformationOfMemberT<ToTransformation, MemberT>> alreadyTransformed)
   {
     std::size_t idx = 0;
     for (auto& c : alreadyTransformed)
@@ -56,19 +56,19 @@ struct FromTransformation
     transformed = value;
   }
 
-  template<typename MemberTT>
-  void applyMember(MemberTT&& member, FromTransformation alreadyTransformed)
+  template<typename MemberT>
+  void applyMember(MemberT&& member, TrasformationOfMemberT<FromTransformation, MemberT> alreadyTransformed)
   {
-    get<MemberTT::ValueType>(transformed) = alreadyTransformed.transformed;
+    get<remove_reference_t<MemberT>>(transformed) = alreadyTransformed.transformed;
   }
 
-  template<typename MemberTT>
-  void applyMember(MemberTT&& member, vector<FromTransformation> alreadyTransformed)
+  template<typename MemberT>
+  void applyMember(MemberT&& member, vector<TrasformationOfMemberT<FromTransformation, MemberT>> alreadyTransformed)
   {
-    get<MemberTT::ValueType>(transformed).clear();
+    get<MemberT::ValueType>(transformed).clear();
     std::size_t idx = 0;
     for (auto& c : alreadyTransformed) {
-      get<MemberTT::ValueType>(transformed).emplace_back(move(alreadyTransformed.transformed));
+      get<remove_reference_t<MemberT>>(transformed).emplace_back(move(alreadyTransformed.transformed));
     }
   }
 };
@@ -78,14 +78,14 @@ template<typename ReflectiveStruct>
 nlohmann::json
 toJson(ReflectiveStruct&& s)
 {
-  return reflective::forEachMember<detailNlohmannJson::ToTransformation>(forward<ReflectiveStruct>(s)).transformed;
+  return reflective::forEachMember(detailNlohmannJson::ToTransformation{}, forward<ReflectiveStruct>(s)).transformed;
 }
 
 template<typename ReflectiveStruct, typename NlohmannJson>
 ReflectiveStruct
 toReflectiveStruct(NlohmannJson&& j)
 {
-  return reflective::forEachMember<detailNlohmannJson::FromTransformation>(ReflectiveStruct{});
+  return reflective::forEachMember(detailNlohmannJson::FromTransformation<ReflectiveStruct>{}, ReflectiveStruct{}).transformed;
 }
 
 }

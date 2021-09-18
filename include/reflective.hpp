@@ -125,27 +125,34 @@ template<size_t I, typename... Ts>
 using IthType = typename tuple_element<I, tuple<Ts...>>::type;
 
 template<typename TransformationTypeForDifferentValueType, typename NewValueType>
-using TrasformationType = typename TransformationTypeForDifferentValueType::template TrasformationType<NewValueType>;
+using TransformationWithSwappedType = typename TransformationTypeForDifferentValueType::template TrasformationType<NewValueType>;
+
+template<typename TransformationOfMemberValue, typename MemberT>
+using TrasformationOfMemberT = TransformationWithSwappedType<TransformationOfMemberValue, typename remove_reference_t<MemberT>::ValueType>;
 
 template<typename Context, typename MemberValueT>
-typename enable_if<!HasToTupleMethod<MemberValueT>::value, TrasformationType<Context, MemberValueT>>::type
+typename enable_if<!HasToTupleMethod<MemberValueT>::value, TransformationWithSwappedType<Context, MemberValueT>>::type
 forTupleMember_conditionHasToTuple(Context&& c, const MemberValueT& memberValue)
 {
-  return TrasformationType<Context, MemberValueT>{ memberValue };
+  return TransformationWithSwappedType<Context, MemberValueT>{ memberValue };
 }
 
+template<typename Context, typename StructT>
+Context
+forEachMember(Context&& c, StructT&& s);
+
 template<typename Context, typename MemberValueT>
-typename enable_if<HasToTupleMethod<MemberValueT>::value, TrasformationType<Context, MemberValueT>>::type
-forTupleMember_conditionHasToTuple(Context&& c,const MemberValueT& memberValue)
+typename enable_if<HasToTupleMethod<MemberValueT>::value, TransformationWithSwappedType<Context, MemberValueT>>::type
+forTupleMember_conditionHasToTuple(Context&& c, const MemberValueT& memberValue)
 {
-  return forEachMember(TrasformationType<Context, MemberValueT>{}, memberValue);
+  return forEachMember(TransformationWithSwappedType<Context, MemberValueT>{}, memberValue);
 }
 
 template<size_t I, typename Context, typename... Ts>
 typename enable_if<IthType<I, Ts...>::containerType == ContainerType::None, Context>::type
 forTupleMember_conditionContainerSize(Context&& c, const tuple<Ts...>& t)
 {
-  c.applyMember(get<I>(t), forTupleMember_conditionHasToTuple(forward<Context>(c),get<I>(t).getValue()));
+  c.applyMember(get<I>(t), forTupleMember_conditionHasToTuple(forward<Context>(c), get<I>(t).getValue()));
   return c;
 }
 
@@ -153,9 +160,11 @@ template<size_t I, typename Context, typename... Ts>
 typename enable_if<IthType<I, Ts...>::containerType == ContainerType::Vector, Context>::type
 forTupleMember_conditionContainerSize(Context&& c, const tuple<Ts...>& t)
 {
-  vector<decltype(Context::template Context<typename IthType<I, Ts...>::ValueType>)> contexts;
+  using MemebeT = IthType<I, Ts...>;
+  using Trans = TrasformationOfMemberT<Context, MemebeT>;
+  vector<Trans> contexts;
   for (const auto& val : get<I>(t).getValue()) {
-    contexts.emplace_back(forTupleMember_conditionHasToTuple(forward<Context>(c),val));
+    contexts.emplace_back(forTupleMember_conditionHasToTuple(forward<Context>(c), val).transformed);
   }
   c.applyMember(get<I>(t), move(contexts));
   return c;

@@ -157,10 +157,10 @@ TEST(HasIterator, _)
   EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record>>::value));
   EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record::id_t>>::value));
 }
-
-TEST(TransformationTest, TransformationCanBeUsedWithReflectiveStruct)
-{
-  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, Record{}));
-  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, RecordInRecord{}));
-  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, RecordVector{}));
-}
+//
+//TEST(TransformationTest, TransformationCanBeUsedWithReflectiveStruct)
+//{
+//  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, Record{}));
+//  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, RecordInRecord{}));
+//  EXPECT_NO_THROW(reflective::forEachMember(reflective::Transformation{}, RecordVector{}));
+//}
