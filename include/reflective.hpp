@@ -84,11 +84,6 @@ toTupleOfMembers(Struct&& s, MemberTs&&...)
   explicit operator name##_t() const& { return name; }                                                                                     \
   explicit operator name##_t()&& { return reflective::import::move(name); }
 
-#define DEFINE_TO_TUPLE(...)                                                                                                               \
-  auto toTuple() const& { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                       \
-  auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }                                  \
-  using hasToTuple = reflective::import::true_type;
-
 #define DEFINE_MEMBER_VECTOR(type, name, defaultValue)                                                                                     \
   struct name##Tag                                                                                                                         \
   {                                                                                                                                        \

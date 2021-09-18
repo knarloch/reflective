@@ -1,6 +1,7 @@
 #include "Record.hpp"
 #include "gtest/gtest.h"
 #include <array>
+#include <transformation/Transformation.hpp>
 
 TEST(RecordTest, CanGetSetValue_bultinType)
 {
@@ -131,13 +132,15 @@ TEST(RecordArrayTest, CanConvertToTupleOfDeclaredFields)
   EXPECT_EQ(typeid(RecordVector::recordVector_t), typeid(std::get<1>(t)));
 }
 
-TEST(HasToTupleTest, _){
+TEST(HasToTupleTest, whenTypeDefinesToTuple_HasToTupleIsTrue)
+{
   EXPECT_TRUE(reflective::HasToTupleMethod<Record>::value);
   EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t>::value);
   EXPECT_FALSE(reflective::HasToTupleMethod<Record::id_t::ValueType>::value);
 }
 
-TEST(HasIterator, _){
+TEST(HasIterator, _)
+{
   EXPECT_FALSE(reflective::HasIterator<int>::value);
   EXPECT_FALSE(reflective::HasIterator<Record>::value);
   EXPECT_FALSE(reflective::HasIterator<Record::id_t>::value);
@@ -153,4 +156,11 @@ TEST(HasIterator, _){
   EXPECT_TRUE((reflective::HasIterator<std::initializer_list<int>>::value));
   EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record>>::value));
   EXPECT_TRUE((reflective::HasIterator<std::initializer_list<Record::id_t>>::value));
+}
+
+TEST(TransformationTest, TransformationCanBeUsedWithReflectiveStruct)
+{
+  EXPECT_NO_THROW(reflective::forEachMember<reflective::Transformation>(Record{}));
+  EXPECT_NO_THROW(reflective::forEachMember<reflective::Transformation>(RecordInRecord{}));
+  EXPECT_NO_THROW(reflective::forEachMember<reflective::Transformation>(RecordVector{}));
 }

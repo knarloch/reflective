@@ -1,5 +1,5 @@
-#ifndef REFLECTIVE_TOSTRING_HPP
-#define REFLECTIVE_TOSTRING_HPP
+#ifndef REFLECTIVE_TREELIKESTRING_HPP
+#define REFLECTIVE_TREELIKESTRING_HPP
 
 #include "reflective.hpp"
 #include <sstream>
@@ -59,4 +59,4 @@ toTreelikeMultilineString(const Struct& s)
 
 }
 
-#endif // REFLECTIVE_TOSTRING_HPP
+#endif // REFLECTIVE_TREELIKESTRING_HPP

@@ -3,6 +3,7 @@
 set(TEST_SOURCES
         reflectiveTest.cpp
         toTreelikeMultilineStringTest.cpp
+        nlohmannJsonTransformationTest.cpp
         )
 
 add_executable(unitTests ${TEST_SOURCES})
