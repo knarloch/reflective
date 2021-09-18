@@ -10,9 +10,12 @@
 
 namespace reflective {
 
+template<typename maybeUnused = void>
 struct Transformation
 {
 
+  template<typename maybeUnused_>
+  using TrasformationType = Transformation<maybeUnused_>;
   // probably some members are required to hold transformed reflective structure.
 
   Transformation() = default;
@@ -28,7 +31,7 @@ struct Transformation
   // Transformation class must implement applyMember. The method applyMember accepts already constructed Transformation
   // of member value
   template<typename MemberT>
-  void applyMember(MemberT&& member, Transformation context)
+  void applyMember(MemberT&& member, TrasformationType<typename MemberT::ValueType> context)
   {}
 
   // Transformation class must implement applyMember. The method applyMember accepts already constructed container of Transformations
@@ -36,7 +39,7 @@ struct Transformation
   // An override for each container template used in reflective structure that is meant to be used with this transformation is required.
 
   template<typename MemberT>
-  void applyMember(MemberT&& member, vector<Transformation> contexts)
+  void applyMember(MemberT&& member, vector<TrasformationType<typename MemberT::ValueType>> contexts)
   {}
 };
 }

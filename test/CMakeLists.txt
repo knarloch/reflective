@@ -2,7 +2,7 @@
 
 set(TEST_SOURCES
         reflectiveTest.cpp
-        toTreelikeMultilineStringTest.cpp
+#        toTreelikeMultilineStringTest.cpp
         nlohmannJsonTransformationTest.cpp
         )
 

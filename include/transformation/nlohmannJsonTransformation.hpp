@@ -6,8 +6,13 @@
 namespace reflective {
 
 namespace detailNlohmannJson {
+
+template<typename = void>
 struct ToTransformation
 {
+
+  template<typename unused>
+  using TrasformationType = ToTransformation<unused>;
 
   nlohmann::json transformed;
 
@@ -34,32 +39,37 @@ struct ToTransformation
   }
 };
 
-template<typename ReflectiveStruct>
+template<typename ValueT>
 struct FromTransformation
 {
+  using Value = ValueT;
+  Value transformed;
 
-  nlohmann::json transformed;
+  template<typename OtherValueT>
+  using TrasformationType = FromTransformation<OtherValueT>;
 
   FromTransformation() = default;
 
-  template<typename ValueT>
-  explicit FromTransformation(const ValueT& value)
+  template<typename Value>
+  explicit FromTransformation(const Value& value)
   {
     transformed = value;
   }
 
-  template<typename MemberT>
-  void applyMember(MemberT&& member, FromTransformation alreadyTransformed)
+  template<typename MemberTT>
+  void applyMember(MemberTT&& member, FromTransformation alreadyTransformed)
   {
-    transformed[member.getMemberName()] = alreadyTransformed.transformed;
+    get<MemberTT::ValueType>(transformed) = alreadyTransformed.transformed;
   }
 
-  template<typename MemberT>
-  void applyMember(MemberT&& member, vector<FromTransformation> alreadyTransformed)
+  template<typename MemberTT>
+  void applyMember(MemberTT&& member, vector<FromTransformation> alreadyTransformed)
   {
+    get<MemberTT::ValueType>(transformed).clear();
     std::size_t idx = 0;
-    for (auto& c : alreadyTransformed)
-      transformed[member.getMemberName()][idx++] = move(c.transformed);
+    for (auto& c : alreadyTransformed) {
+      get<MemberTT::ValueType>(transformed).emplace_back(move(alreadyTransformed.transformed));
+    }
   }
 };
 }
@@ -72,7 +82,8 @@ toJson(ReflectiveStruct&& s)
 }
 
 template<typename ReflectiveStruct, typename NlohmannJson>
-ReflectiveStruct toReflectiveStruct(NlohmannJson&& j)
+ReflectiveStruct
+toReflectiveStruct(NlohmannJson&& j)
 {
   return reflective::forEachMember<detailNlohmannJson::FromTransformation>(ReflectiveStruct{});
 }
