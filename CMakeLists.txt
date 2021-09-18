@@ -4,7 +4,9 @@ project(reflective)
 set(CMAKE_CXX_STANDARD 20)
 enable_testing()
 
-add_subdirectory(googletest)
+include_directories(3rdParty/json/single_include)
+
+add_subdirectory(3rdParty)
 add_subdirectory(test)
 
 
