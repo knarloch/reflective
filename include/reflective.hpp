@@ -15,7 +15,9 @@ using std::forward;
 using std::get;
 using std::make_tuple;
 using std::move;
+using std::remove_cv;
 using std::remove_cv_t;
+using std::remove_reference;
 using std::remove_reference_t;
 using std::true_type;
 using std::tuple;
@@ -25,6 +27,15 @@ using std::vector;
 using std::void_t;
 }
 using namespace reflective::import;
+
+#if 201703L > __cplusplus
+template<typename T>
+remove_cvref_t = typename remove_cv<typename remove_reference<T>::type>::type;
+#else
+namespace import {
+using std::remove_cvref_t;
+}
+#endif
 
 enum class ContainerType
 {
@@ -39,6 +50,8 @@ struct Member : public Tag
   ValueType value;
 
   static constexpr ContainerType containerType = ct;
+
+  Member() = default;
 
   Member(ValueType tt)
     : value{ move(tt) }
@@ -63,11 +76,18 @@ struct Member : public Tag
   ValueType getValue() && { return move(value); }
 };
 
+template<typename... MemberTs>
+auto
+toTupleOfVariables(MemberTs&&...)
+{
+  return tuple<remove_cvref_t<MemberTs>...>();
+}
+
 template<typename Struct, typename... MemberTs>
 auto
 toTupleOfMembers(Struct&& s, MemberTs&&...)
 {
-  return make_tuple(static_cast<remove_cv_t<remove_reference_t<MemberTs>>>(forward<Struct>(s))...);
+  return make_tuple(static_cast<remove_cvref_t<MemberTs>>(forward<Struct>(s))...);
 }
 
 #define STRINGIFY(x) #x
@@ -96,9 +116,10 @@ toTupleOfMembers(Struct&& s, MemberTs&&...)
   explicit operator name##_t()&& { return reflective::import::move(name); }
 
 #define DEFINE_TO_TUPLE(...)                                                                                                               \
+  using TupleType = decltype(toTupleOfVariables(__VA_ARGS__));                                                                             \
   auto toTuple() const& { return reflective::toTupleOfMembers(*this, __VA_ARGS__); }                                                       \
   auto toTuple()&& { return reflective::toTupleOfMembers(reflective::import::move(*this), __VA_ARGS__); }                                  \
-  using hasToTuple = reflective::import::true_type;
+  void setFromTuple(TupleType t){};
 
 template<size_t I = 0, typename Context, typename... Ts>
 typename enable_if<I == sizeof...(Ts), Context>::type
@@ -111,7 +132,7 @@ template<typename, typename = void>
 struct HasToTupleMethod : false_type
 {};
 template<typename T>
-struct HasToTupleMethod<T, void_t<typename T::hasToTuple>> : true_type
+struct HasToTupleMethod<T, void_t<typename T::TupleType>> : true_type
 {};
 
 template<typename, typename = void>
@@ -128,7 +149,7 @@ template<typename TransformationTypeForDifferentValueType, typename NewValueType
 using TransformationWithSwappedType = typename TransformationTypeForDifferentValueType::template TrasformationType<NewValueType>;
 
 template<typename TransformationOfMemberValue, typename MemberT>
-using TrasformationOfMemberT = TransformationWithSwappedType<TransformationOfMemberValue, typename remove_reference_t<MemberT>::ValueType>;
+using TrasformationOfMemberT = TransformationWithSwappedType<TransformationOfMemberValue, typename remove_cvref_t<MemberT>::ValueType>;
 
 template<typename Context, typename MemberValueT>
 typename enable_if<!HasToTupleMethod<MemberValueT>::value, TransformationWithSwappedType<Context, MemberValueT>>::type
@@ -181,7 +202,8 @@ template<typename Context, typename StructT>
 Context
 forEachMember(Context&& c, StructT&& s)
 {
-  return forEachTupleMember(forward<Context>(c), forward<StructT>(s).toTuple());
+   c.transformed = forEachTupleMember(TransformationWithSwappedType<Context, typename remove_cvref_t<StructT>::TupleType>{}, forward<StructT>(s).toTuple()).transformed;
+   return c;
 }
 
 } // namespace reflective

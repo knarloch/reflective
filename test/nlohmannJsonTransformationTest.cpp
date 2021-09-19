@@ -44,21 +44,15 @@ TEST(toJsonTest, TransformRecordVector)
 TEST(fromJsonTest, TransformRecord)
 {
 
-  auto x = Record{}.toTuple();
-  decltype(x) y;
-}
+  nlohmann::json  json;
+  json[Record::id_t::memberName] =  10;
+  json[Record::someNumber_t::memberName] = 230;
+  json[Record::someText_t::memberName] = "modifiedText";
 
-//TEST(fromJsonTest, TransformRecord)
-//{
-//
-//  nlohmann::json  json;
-//  json[Record::id_t::memberName] =  10;
-//  json[Record::someNumber_t::memberName] = 230;
-//  json[Record::someText_t::memberName] = "modifiedText";
-//
+  auto record = Record{};
 //  auto record = reflective::toReflectiveStruct<Record>(json);
-//
-//  EXPECT_EQ(record.id, 10);
-//  EXPECT_EQ(record.someNumber, 230);
-//  EXPECT_EQ(record.someText.getValue(), std::string{"modifiedText"});
-//}
+
+  EXPECT_EQ(record.id, 10);
+  EXPECT_EQ(record.someNumber, 230);
+  EXPECT_EQ(record.someText.getValue(), std::string{"modifiedText"});
+}

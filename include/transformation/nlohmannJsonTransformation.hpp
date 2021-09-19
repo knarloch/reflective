@@ -59,7 +59,8 @@ struct FromTransformation
   template<typename MemberT>
   void applyMember(MemberT&& member, TrasformationOfMemberT<FromTransformation, MemberT> alreadyTransformed)
   {
-    get<remove_reference_t<MemberT>>(transformed) = alreadyTransformed.transformed;
+    using Member = remove_cvref_t<MemberT>;
+    get<Member>(transformed) = alreadyTransformed.transformed;
   }
 
   template<typename MemberT>
